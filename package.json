@@ -1,0 +1,28 @@
+{
+	"name": "bitmap",
+	"version": "0.0.1",
+	"description": "一份简单的扩展包",
+	"author": "Cocos Creator",
+	"main": "main.js",
+	"main-menu": {
+		"i18n:MAIN_MENU.package.title/bitmap/打开面板": {
+			"message": "bitmap:OpenPanel"
+		}
+	},
+	"panel.tool": {
+		"main": "panel/index.js",
+		"type": "dockable",
+		"title": "工具",
+		"width": 400,
+		"height": 300
+	},
+	"dependencies": {
+		"node-xlsx": "^0.16.1"
+	},
+	"reload": {
+		"ignore": [
+			"config.json",
+			"font.txt"
+		]
+	}
+}

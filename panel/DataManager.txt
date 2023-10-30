@@ -1,0 +1,52 @@
+//declare let require: any;
+//import { datas } from './Datas';
+//Datas 不要手动修改4  import导入文件
+@@import
+//Datas 不要手动修改4
+
+@cc._decorator.ccclass
+export default class NewClass extends cc.Component {
+    @cc._decorator.property(cc.JsonAsset)
+    datas: cc.JsonAsset = null;
+    onLoad() {
+        if (CC_DEBUG) cc.log(this.datas)
+        DataManager.init(this.datas.json)
+    }
+}
+
+export namespace DataManager {
+    //Datas 不要手动修改1 表变量定义
+    // export let AIDatas: Array<AIData>;
+    // export let AIDatasById: { [key: number]: AIData };
+    @@varDefined
+    //Datas 不要手动修改1
+    export function init(datas: any): void {
+        // if(CC_EDITOR) return;
+        // let datas=require("Datas.js");
+        //Datas 不要手动修改2 变量的赋值
+        //for example: 
+        // AIDatas = datas["AI"];
+        // AIDatasById = getsById<AIData>(AIDatas);
+        //
+        @@funcContent
+        //Datas 不要手动修改2
+    }
+
+    //数组化数据,使其可以使用下标访问
+    function arrayData(cls: any, key: string, datas: { [key in string]: any }) {
+        let values = []
+        let items = datas[key]
+        for (let key1 in items) {
+            let obj = new cls()
+            obj._data = items[key1]
+            values.push(obj)
+        }
+        return values
+    }
+    function getsById(datas: Array<any>): { [key: number]: any } {
+        let datasById: { [key: number]: any } = {}
+        datas.forEach(v => { datasById[v.ID] = v })
+        return datasById
+    }
+}
+// DataManager.init();

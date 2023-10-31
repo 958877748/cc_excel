@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 
 try {
-	const nodexlsx = require('node-xlsx')
+	var nodexlsx = require('node-xlsx')
 } catch (error) {
 	Editor.Dialog.messageBox({
 		title: '提示',
@@ -22,14 +22,23 @@ class Excel {
 	 * @type {{[x:string]:{type:string,getValue:Function}}}
 	 */
 	allTypeData
-	constructor() {
+	stateLabel
+	/**
+	 * 在面板上显示文字
+	 * @param {string} str 
+	 */
+	showState(str) {
+		this.stateLabel.innerText = str
+	}
+	constructor(stateLabel) {
+		this.stateLabel = stateLabel
 		this.projectPath = Editor.Project.path
 		this.allTypeData = {
-			'int': {
+			'number': {
 				type: 'number',
 				getValue: this.toNumber
 			},
-			'list<int>': {
+			'numbers': {
 				type: 'Array<number>',
 				getValue: this.toNumber
 			},
@@ -138,10 +147,11 @@ class Excel {
 		}
 	}
 	toJson() {
-		if (nodexlsx == null) {
+		if (!nodexlsx) {
 			this.log('please npm install !!!')
 			return
 		}
+		this.showState('start generate')
 		let saveRoot = this.projectPath + '/assets/data'
 		let xlsxRoot = this.projectPath + '/excel'
 
@@ -156,6 +166,8 @@ class Excel {
 
 		//刷新资源管理器
 		Editor.assetdb.refresh('db://assets/data/')
+
+		this.showState('generate complete')
 	}
 	/**
 	 * 解析所有excel文件
@@ -255,7 +267,7 @@ class Excel {
 				//get DiamondReward(): number { return this._data[1] }
 				str += `    get ${enName}(): `
 				//取出自定义的类型信息
-				let typeData = allTypeData[lowType]
+				let typeData = this.allTypeData[lowType]
 				if (typeData) {
 					str += typeData.type
 				} else {
@@ -292,7 +304,7 @@ class Excel {
 			//id的类型
 			let type = sheet1.data[2][0]
 			let lowType = type.toLowerCase()
-			let idType = allTypeData[lowType].type
+			let idType = this.allTypeData[lowType].type
 			if (!idType) continue
 
 			importContent += `import {${xlsxName}Data} from "./ConfigTypeDefind"\n`
@@ -328,8 +340,8 @@ class Excel {
 			}
 			let enNames = sheetdata[1]
 			let types = sheetdata[2]
-			//从第4行开始读取数据 生成数据对象
-			a: for (let row = 4; row < sheetdata.length; row++) {
+			//从第4行(下标为3)开始读取数据 生成数据对象
+			a: for (let row = 3; row < sheetdata.length; row++) {
 				let rowdatas = sheetdata[row]
 				if (rowdatas.length === 0) continue
 				//一行代表一个 data(数据对象) 
@@ -340,7 +352,7 @@ class Excel {
 					if (type === undefined) continue
 					let value = rowdatas[i]
 					let lowType = type.toLowerCase()
-					let typeData = allTypeData[lowType]
+					let typeData = this.allTypeData[lowType]
 					if (typeData) {
 						data.push(typeData.getValue(value))
 					}

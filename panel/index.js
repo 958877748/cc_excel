@@ -25,7 +25,7 @@ Editor.Panel.extend({
 
     // method executed when template and styles are successfully loaded and initialized
     ready() {
-        let excel = new Excel()
+        let excel = new Excel(this.$label)
         this.$btn.addEventListener('confirm', () => {
             excel.toJson()
         });

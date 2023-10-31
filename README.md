@@ -1,9 +1,10 @@
 # cc_excel
-Cocos 2.4 编辑器 插件 把excel转为json
-第一列必须是ID
-第一行中文名
-第二行英文名
-第三行js类型[number string numbers strings]
+- Cocos 2.4 编辑器 插件 把excel转为json
+- 第一列必须是ID
+- 第一行中文名
+- 第二行英文名
+- 第三行js类型[number string numbers strings]
+# 例子
 | ID | Name       | Description                  | Property     |
 |----|------------|------------------------------|--------------|
 | 1  | Healing    | Restores health points       | Restorative  |

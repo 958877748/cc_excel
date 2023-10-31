@@ -306,10 +306,10 @@ class Excel {
 			}
 
 			importContent += `import { ${xlsxName}Data } from "./ConfigTypeDefind"\n`
-			defindContent += `	export let ${xlsxName}Datas: Array<${xlsxName}Data>\n`
-			defindContent += `	export let ${xlsxName}DatasById: { [key in number]: ${xlsxName}Data }\n`
-			funcContent += `		${xlsxName}Datas = arrayData(${xlsxName}Data, "${xlsxName}", datas) \n`
-			funcContent += `		${xlsxName}DatasById = getsById(${xlsxName}Datas) \n`
+			defindContent += `    export let ${xlsxName}Datas: Array<${xlsxName}Data>\n`
+			defindContent += `    export let ${xlsxName}DatasById: { [key in number]: ${xlsxName}Data }\n`
+			funcContent += `        ${xlsxName}Datas = arrayData(${xlsxName}Data, "${xlsxName}", datas)\n`
+			funcContent += `        ${xlsxName}DatasById = getsById(${xlsxName}Datas)\n`
 		}
 		//在这个三个位置替换字符串
 		clazData = clazData.replace("@@import", importContent)

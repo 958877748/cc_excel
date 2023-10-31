@@ -18,7 +18,7 @@ export namespace DataManager {
     //Datas 不要手动修改1 表变量定义
     // export let AIDatas: Array<AIData>;
     // export let AIDatasById: { [key: number]: AIData };
-    @@varDefined
+@@varDefined
     //Datas 不要手动修改1
     export function init(datas: any): void {
         // if(CC_EDITOR) return;
@@ -28,7 +28,7 @@ export namespace DataManager {
         // AIDatas = datas["AI"];
         // AIDatasById = getsById<AIData>(AIDatas);
         //
-        @@funcContent
+@@funcContent
         //Datas 不要手动修改2
     }
 

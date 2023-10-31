@@ -1,7 +1,5 @@
 const fs = require('fs')
 const path = require('path')
-const { log } = require('./function')
-
 
 try {
 	const nodexlsx = require('node-xlsx')
@@ -140,6 +138,10 @@ class Excel {
 		}
 	}
 	toJson() {
+		if (nodexlsx == null) {
+			this.log('please npm install !!!')
+			return
+		}
 		let saveRoot = this.projectPath + '/assets/data'
 		let xlsxRoot = this.projectPath + '/excel'
 
@@ -224,23 +226,23 @@ class Excel {
 				return
 			}
 			/** @type {string[]} */
-			let titles = sheet1.data[0]
+			let line1 = sheet1.data[0]
 			/** @type {string[]} */
-			let vars = sheet1.data[1]
+			let line2 = sheet1.data[1]
 			/** @type {string[]} */
-			let types = sheet1.data[2]
+			let line3 = sheet1.data[2]
 
 			//拼凑ts文件的字符串
 			str += `export class ${xlsxName}Data extends Data{\n`
 			//拼凑每一条属性
 			let delect = 0
-			for (let i = 1; i < types.length; i++) {
+			for (let i = 1; i < line3.length; i++) {
 				/** 变量中文描述 */
-				let cnName = titles[i]
+				let cnName = line1[i]
 				/** 变量英文名字 */
-				let enName = vars[i]
+				let enName = line2[i]
 				/** 变量类型 */
-				let type = types[i]
+				let type = line3[i]
 				if (type === undefined) {
 					delect++
 					continue
@@ -258,7 +260,7 @@ class Excel {
 					str += typeData.type
 				} else {
 					str += 'any'
-					log('[未知类型]' + type, __filename)
+					this.log('[未知类型]' + type, __filename)
 				}
 				//换行
 				str += ` { return this._data[${i - delect}] }\n`
@@ -326,8 +328,8 @@ class Excel {
 			}
 			let enNames = sheetdata[1]
 			let types = sheetdata[2]
-			//从第5行开始读取数据 生成数据对象
-			a: for (let row = 5; row < sheetdata.length; row++) {
+			//从第4行开始读取数据 生成数据对象
+			a: for (let row = 4; row < sheetdata.length; row++) {
 				let rowdatas = sheetdata[row]
 				if (rowdatas.length === 0) continue
 				//一行代表一个 data(数据对象) 

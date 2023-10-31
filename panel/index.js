@@ -1,3 +1,5 @@
+const Excel = require("./Excel");
+
 // panel/index.js, this filename needs to match the one registered in package.json
 Editor.Panel.extend({
     // css style for panel
@@ -12,7 +14,7 @@ Editor.Panel.extend({
     <hr />
     <div>State: <span id="label">--</span></div>
     <hr />
-    <ui-button id="btn">Send To Main</ui-button>
+    <ui-button id="btn">Excel To Json</ui-button>
   `,
 
     // element and variable binding
@@ -23,8 +25,9 @@ Editor.Panel.extend({
 
     // method executed when template and styles are successfully loaded and initialized
     ready() {
+        let excel = new Excel()
         this.$btn.addEventListener('confirm', () => {
-            Editor.Ipc.sendToMain('cc_excel:clicked');
+            excel.toJson()
         });
     },
 

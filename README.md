@@ -1,10 +1,15 @@
 # cc_excel
 Cocos 2.4 编辑器 插件 把excel转为json
-
-|  ID  | 名称       | 描述                       | 属性         |
-|----|------------|------------------------------|--------------|
+## 第一列必须是ID
+## 第一行中文名
+## 第二行英文名
+## 第三行js类型
+- number
+- string
+- numbers
+- strings
 | ID | Name       | Description                  | Property     |
-| number | string       | string                  | string     |
+|----|------------|------------------------------|--------------|
 | 1  | Healing    | Restores health points       | Restorative  |
 | 2  | Stamina    | Increases energy level       | Energizing   |
 | 3  | Invisibility | Grants temporary invisibility | Stealthy     |

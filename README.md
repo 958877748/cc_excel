@@ -1,7 +1,7 @@
 # cc_excel
 Cocos 2.4 编辑器 插件 把excel转为json
 
-|    | 名称       | 描述                       | 属性         |
+|  ID  | 名称       | 描述                       | 属性         |
 | ID | Name       | Description                  | Property     |
 | number | string       | string                  | string     |
 |----|------------|------------------------------|--------------|

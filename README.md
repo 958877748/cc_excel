@@ -1,9 +1,9 @@
 # cc_excel
 - Cocos 2.4 编辑器 插件 把excel转为json
-- 第一列必须是ID
-- 第一行中文名
-- 第二行英文名
-- 第三行js类型[number string numbers strings]
+- 第一竖列必须是ID
+- 第一横行中文名
+- 第二横行英文名
+- 第三横行js类型[number string numbers strings]
 # 例子
 | ID | Name       | Description                  | Property     |
 |----|------------|------------------------------|--------------|

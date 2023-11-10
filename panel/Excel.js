@@ -10,6 +10,21 @@ try {
 	})
 }
 
+class Sheet {
+	/**
+	 * @type {string}
+	 */
+	name
+	/**
+	 * @type {Array<Array<string|number>>}
+	 */
+	data
+	/**
+	 * @type {Array<string>}
+	 */
+	type
+}
+
 class Excel {
 	/**
 	 * 当前项目路径
@@ -21,6 +36,10 @@ class Excel {
 	 * 面板上的label 可显示一段文字
 	 */
 	stateLabel
+	/**
+	 * @type {Record<string,Array<Sheet>>}
+	 */
+	xlsxs
 	/**
 	 * 在面板上显示文字
 	 * @param {string} str 
@@ -48,57 +67,6 @@ class Excel {
 			message: message
 		})
 	}
-	toNumber(value) {
-		if (value) {
-			return Number(value)
-		} else {
-			return 0
-		}
-	}
-	toString(value) {
-		if (value) {
-			return value + ''
-		} else {
-			return ''
-		}
-	}
-	toBoolean(value) {
-		if (value === undefined) {
-			return false
-		} else {
-			if (value)
-				return true
-			else
-				return false
-		}
-	}
-	toListNumber(value) {
-		if (value === undefined) {
-			return null
-		} else {
-			if (value.split == null) {
-				return [Number(value)]
-			}
-			let str = value.replace(/,/g, '|')
-			let list = str.split('|')
-			let arr = list.reduce((a, c, i, the) => {
-				a.push(Number(c))
-				return a
-			}, [])
-			return arr
-		}
-	}
-	toListString(value) {
-		if (value === undefined) {
-			return null
-		} else {
-			if (value.split) {
-				return value.split(',')
-			} else {
-				debugger
-			}
-		}
-	}
 	toJson() {
 		if (!nodexlsx) {
 			this.log('please npm install !!!')
@@ -107,13 +75,15 @@ class Excel {
 		this.showState('start generate')
 
 		let xlsxPaths = this.readFileList(this.projectPath + '/excel')
-		let xlsxs = this.parseXlsx(xlsxPaths)
+		this.xlsxs = this.parseXlsx(xlsxPaths)
 
-		this.save_ConfigTypeDefind_ts(xlsxs)
+		this.generateConfigTypeDefind()
 
-		this.save_dataManager_ts(xlsxs)
+		this.generateDataManager()
 
-		this.save_datas_json(xlsxs)
+		this.generateDatas()
+
+		this.xlsxs = null
 
 		//刷新资源管理器
 		Editor.assetdb.refresh('db://assets/data/')
@@ -228,89 +198,86 @@ class Excel {
 		return fileList
 	}
 	/**
-	 * @private
-	 * @param {*} xlsxs 
-	 * @param {*} saveRoot 
-	 * @returns 
+	 * @param {(sheet:Sheet)=>void} callBack 
 	 */
-	save_ConfigTypeDefind_ts(xlsxs, saveRoot) {
+	forEachSheet(callBack) {
+		for (const name in this.xlsxs) {
+			let xlsx = this.xlsxs[name]
+			for (let i = 0; i < xlsx.length; i++) {
+				const sheet = xlsx[i]
+				if (sheet.data[0][0] == 'export') {
+					if (sheet.data.length >= 3) {
+						callBack(sheet)
+					}
+				}
+			}
+		}
+	}
+	/**
+	 * 生成 ConfigTypeDefind.ts
+	 */
+	generateConfigTypeDefind() {
 		let str = ''
 		str += 'class Data {\n'
 		str += '    protected _data: Array<any>\n'
 		str += '    /** ID */\n'
 		str += '    get ID(): number { return this._data[0] }\n'
 		str += '}\n'
-
-		for (const xlsxName in xlsxs) {
-			let xlsx = xlsxs[xlsxName]
-			let sheet1 = xlsx[0]
-			if (sheet1.data.length < 3) {
-				this.log(`表 ${xlsxName} 行数小于3行, 跳过`)
-				return
-			}
+		this.forEachSheet(sheet => {
 			/** 
 			 * 第一行 中文名
 			 * @type {string[]}
 			 */
-			let Chinese_name_list = sheet1.data[0]
+			let chineseNames = sheet.data[0]
 			/** 
 			 * 第二行 英文名
 			 * @type {string[]}
 			 */
-			let English_name_list = sheet1.data[1]
+			let englishNames = sheet.data[1]
 
 			// 保存类型到sheet中 第一个是id number类型
-			sheet1.type = ['number']
+			sheet.type = ['number']
 
 			//拼凑ts文件的字符串
-			str += `export class ${xlsxName}Data extends Data {\n`
+			str += `export class ${sheet.name}Data extends Data {\n`
 			//拼凑每一条属性
 			let delect = 0
-			for (let i = 1; i < English_name_list.length; i++) {
-				let Chinese_name = Chinese_name_list[i]
-				let English_name = English_name_list[i]
-				//注释
-				str += `    /** ${Chinese_name} */\n`
-				//变量名
-				//get DiamondReward(): number { return this._data[1] }
-				str += `    get ${English_name}(): `
-				//类型
-				let type = this.getType(sheet1, i)
-				sheet1.type.push(type)
+			for (let i = 1; i < englishNames.length; i++) {
+				let chineseName = chineseNames[i]
+				let englishName = englishNames[i]
+				// 中文注释
+				str += `    /** ${chineseName} */\n`
+				// 英文变量名
+				str += `    get ${englishName}(): `
+				// 类型
+				let type = this.getType(sheet, i)
+				sheet.type.push(type)
 				str += type
-				//换行
+				// 换行
 				str += ` { return this._data[${i - delect}] }\n`
 			}
 			str += `} \n`
-		}
+		})
 		//写入文件保存
 		this.saveFile(str, "ConfigTypeDefind.ts")
 	}
 	/**
-	 * @private
-	 * @param {*} xlsxs 
-	 * @param {*} saveRoot 
-	 * @returns 
+	 * 生成 DataManager.ts
 	 */
-	save_dataManager_ts(xlsxs, saveRoot) {
+	generateDataManager() {
 		let importContent = ""
 		let defindContent = ""
 		let funcContent = ""
 		let url = path.join(__dirname, 'DataManager.txt')
 		let clazData = fs.readFileSync(url, { encoding: "utf-8" })
-		for (const xlsxName in xlsxs) {
-			let xlsx = xlsxs[xlsxName]
-			let sheet1 = xlsx[0]
-			if (sheet1.data.length < 3) {
-				return
-			}
-
-			importContent += `import { ${xlsxName}Data } from "./ConfigTypeDefind"\n`
-			defindContent += `    export let ${xlsxName}Datas: Array<${xlsxName}Data>\n`
-			defindContent += `    export let ${xlsxName}DatasById: { [key in number]: ${xlsxName}Data }\n`
-			funcContent += `        ${xlsxName}Datas = arrayData(${xlsxName}Data, "${xlsxName}", datas)\n`
-			funcContent += `        ${xlsxName}DatasById = getsById(${xlsxName}Datas)\n`
-		}
+		this.forEachSheet(sheet => {
+			let name = sheet.name
+			importContent += `import { ${name}Data } from "./ConfigTypeDefind"\n`
+			defindContent += `    export let ${name}Datas: Array<${name}Data>\n`
+			defindContent += `    export let ${name}DatasById: { [key in number]: ${name}Data }\n`
+			funcContent += `        ${name}Datas = arrayData(${name}Data, "${name}", datas)\n`
+			funcContent += `        ${name}DatasById = getsById(${name}Datas)\n`
+		})
 		//在这个三个位置替换字符串
 		clazData = clazData.replace("@@import", importContent)
 		clazData = clazData.replace("@@varDefined", defindContent)
@@ -319,30 +286,28 @@ class Excel {
 		this.saveFile(clazData, "DataManager.ts")
 	}
 	/**
-	 * @private
-	 * @param {*} xlsxs 
-	 * @param {*} saveRoot 
-	 * @returns 
+	 * 生成 data.json
 	 */
-	save_datas_json(xlsxs, saveRoot) {
+	generateDatas() {
 		let json = {}
-		for (const xlsxName in xlsxs) {
-			json[xlsxName] = {}
-			let xlsx = xlsxs[xlsxName]
-			let sheet1 = xlsx[0]
-			if (sheet1.data.length < 3) {
-				return
-			}
-			let English_name_list = sheet1.data[1]
-			let types = sheet1.type
+		this.forEachSheet(sheet => {
+			json[sheet.name] = {}
+			let englishNames = sheet.data[1]
+			let types = sheet.type
 			//从第3行(下标为2)开始读取数据 生成数据对象
-			for (let row = 2; row < sheet1.data.length; row++) {
-				let rowdatas = sheet1.data[row]
-				if (rowdatas.length === 0) continue
+			for (let row = 2; row < sheet.data.length; row++) {
+				let rowdatas = sheet.data[row]
+				let id = rowdatas[0]
+				if (id == null) {
+					continue
+				}
+				if (typeof id !== 'number') {
+					continue
+				}
 				//一行代表一个 data(数据对象) 
 				let data = []
 				//给这个 data(数据对象) 添加表里的属性 
-				for (let i = 0; i < English_name_list.length; i++) {
+				for (let i = 0; i < englishNames.length; i++) {
 					let type = types[i]
 					let value = rowdatas[i]
 					switch (type) {
@@ -353,21 +318,20 @@ class Excel {
 							data.push(`${value}`)
 							break;
 						case 'Array<number>':
-							let array_number = []
-							let value_str = value + ''
-							value_str.split('|').forEach(v => {
-								array_number.push(Number(v))
+							let numbers = []
+							String(value).split('|').forEach(v => {
+								numbers.push(Number(v))
 							})
-							data.push(array_number)
+							data.push(numbers)
 							break;
 						case 'Array<string>':
 							data.push(value.split('|'))
 							break;
 					}
 				}
-				json[xlsxName][data[0]] = data
+				json[sheet.name][data[0]] = data
 			}
-		}
+		})
 		this.saveFile(JSON.stringify(json), 'datas.json')
 	}
 }

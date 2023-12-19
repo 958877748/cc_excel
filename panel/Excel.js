@@ -198,7 +198,7 @@ class Excel {
 		return fileList
 	}
 	/**
-	 * @param {(sheet:Sheet)=>void} callBack 
+	 * @param {(sheet:Sheet,name:string)=>void} callBack 
 	 */
 	forEachSheet(callBack) {
 		for (const name in this.xlsxs) {
@@ -207,7 +207,7 @@ class Excel {
 				const sheet = xlsx[i]
 				if (sheet.data[0][0] == 'export') {
 					if (sheet.data.length >= 3) {
-						callBack(sheet)
+						callBack(sheet, name)
 					}
 				}
 			}
@@ -223,7 +223,7 @@ class Excel {
 		str += '    /** ID */\n'
 		str += '    get ID(): number { return this._data[0] }\n'
 		str += '}\n'
-		this.forEachSheet(sheet => {
+		this.forEachSheet((sheet, name) => {
 			/** 
 			 * 第一行 中文名
 			 * @type {string[]}
@@ -239,7 +239,7 @@ class Excel {
 			sheet.type = ['number']
 
 			//拼凑ts文件的字符串
-			str += `export class ${sheet.name}Data extends Data {\n`
+			str += `export class ${name}Data extends Data {\n`
 			//拼凑每一条属性
 			let delect = 0
 			for (let i = 1; i < englishNames.length; i++) {
@@ -270,8 +270,7 @@ class Excel {
 		let funcContent = ""
 		let url = path.join(__dirname, 'DataManager.txt')
 		let clazData = fs.readFileSync(url, { encoding: "utf-8" })
-		this.forEachSheet(sheet => {
-			let name = sheet.name
+		this.forEachSheet((sheet, name) => {
 			importContent += `import { ${name}Data } from "./ConfigTypeDefind"\n`
 			defindContent += `    export let ${name}Datas: Array<${name}Data>\n`
 			defindContent += `    export let ${name}DatasById: { [key in number]: ${name}Data }\n`
@@ -290,8 +289,8 @@ class Excel {
 	 */
 	generateDatas() {
 		let json = {}
-		this.forEachSheet(sheet => {
-			json[sheet.name] = {}
+		this.forEachSheet((sheet, name) => {
+			json[name] = {}
 			let englishNames = sheet.data[1]
 			let types = sheet.type
 			//从第3行(下标为2)开始读取数据 生成数据对象
@@ -329,7 +328,7 @@ class Excel {
 							break;
 					}
 				}
-				json[sheet.name][data[0]] = data
+				json[name][data[0]] = data
 			}
 		})
 		this.saveFile(JSON.stringify(json), 'datas.json')

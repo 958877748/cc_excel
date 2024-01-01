@@ -205,10 +205,20 @@ class Excel {
 			let xlsx = this.xlsxs[name]
 			for (let i = 0; i < xlsx.length; i++) {
 				const sheet = xlsx[i]
-				if (sheet.data[0][0] == 'export') {
-					if (sheet.data.length >= 3) {
-						callBack(sheet, name)
-					}
+				if (sheet.data == null) {
+					continue
+				}
+				if (sheet.data[0] == null) {
+					continue
+				}
+				if (sheet.data[0][0] == null) {
+					continue
+				}
+				if (sheet.data[0][0] != 'export') {
+					continue
+				}
+				if (sheet.data.length >= 3) {
+					callBack(sheet, name)
 				}
 			}
 		}

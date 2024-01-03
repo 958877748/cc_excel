@@ -16,6 +16,7 @@ class Sheet {
 	 */
 	name
 	/**
+	 * 2维数组 (y,x)
 	 * @type {Array<Array<string|number>>}
 	 */
 	data
@@ -224,10 +225,50 @@ class Excel {
 		}
 	}
 	/**
+	 * 循环所有excel表生成枚举
+	 * @param {(sheet:Sheet,name:string)=>void} callBack 
+	 */
+	forEachEnum(callBack) {
+		for (const name in this.xlsxs) {
+			let xlsx = this.xlsxs[name]
+			for (let i = 0; i < xlsx.length; i++) {
+				const sheet = xlsx[i]
+				if (sheet.data == null) {
+					continue
+				}
+				if (sheet.data[0] == null) {
+					continue
+				}
+				if (sheet.data[0][0] == null) {
+					continue
+				}
+				if (sheet.data[0][0] != 'type') {
+					continue
+				}
+				if (sheet.data.length >= 2) {
+					callBack(sheet, name)
+				}
+			}
+		}
+	}
+	/**
 	 * 生成 ConfigTypeDefind.ts
 	 */
 	generateConfigTypeDefind() {
 		let str = ''
+		// 生成枚举
+		// type name desc
+		this.forEachEnum((sheet, name) => {
+			str += `export enum ${name}Type {\n`
+			for (let i = 1; i < sheet.data.length; i++) {
+				let data = sheet.data[i]
+				// 中文注释
+				str += `    /** ${data[2]} */\n`
+				// IncreasedLife = 0,
+				str += `    ${data[1]} = ${data[0]},\n`
+			}
+			str += `}\n`
+		})
 		str += 'class Data {\n'
 		str += '    protected _data: Array<any>\n'
 		str += '    /** ID */\n'

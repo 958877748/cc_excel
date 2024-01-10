@@ -42,6 +42,10 @@ class Excel {
 	 */
 	xlsxs
 	/**
+	 * @type {Record<string,Map<string,number>>}
+	 */
+	types
+	/**
 	 * 在面板上显示文字
 	 * @param {string} str 
 	 */
@@ -92,7 +96,7 @@ class Excel {
 		this.showState('generate complete')
 	}
 	/**
-	 * 获取属性的类型
+	 * 获取属性的类型 根据前12条数据推断类型
 	 * @param {{name:string,data:Array<Array<string|number>>}} sheet 
 	 * @param {number} index 
 	 */
@@ -258,10 +262,16 @@ class Excel {
 		let str = ''
 		// 生成枚举
 		// type name desc
+		this.types = {}
 		this.forEachEnum((sheet, name) => {
+			if (this.types[`${name}Type`] == null) {
+				this.types[`${name}Type`] = new Map()
+			}
+			let map = this.types[`${name}Type`]
 			str += `export enum ${name}Type {\n`
 			for (let i = 1; i < sheet.data.length; i++) {
 				let data = sheet.data[i]
+				map.set(data[1], data[0])
 				// 中文注释
 				str += `    /** ${data[2]} */\n`
 				// IncreasedLife = 0,
@@ -285,6 +295,11 @@ class Excel {
 			 * @type {string[]}
 			 */
 			let englishNames = sheet.data[1]
+			/** 
+			 * 第三行 类型
+			 * @type {string[]}
+			 */
+			let types = sheet.data[2]
 
 			// 保存类型到sheet中 第一个是id number类型
 			sheet.type = ['number']
@@ -301,7 +316,12 @@ class Excel {
 				// 英文变量名
 				str += `    get ${englishName}(): `
 				// 类型
-				let type = this.getType(sheet, i)
+				let type = types[i]
+				if (type) { } else {
+					// 没有写类型 根据数据推断出类型
+					type = this.getType(sheet, i)
+				}
+
 				sheet.type.push(type)
 				str += type
 				// 换行
@@ -344,8 +364,8 @@ class Excel {
 			json[name] = {}
 			let englishNames = sheet.data[1]
 			let types = sheet.type
-			//从第3行(下标为2)开始读取数据 生成数据对象
-			for (let row = 2; row < sheet.data.length; row++) {
+			//从第4行(下标为3)开始读取数据 生成数据对象
+			for (let row = 3; row < sheet.data.length; row++) {
 				let rowdatas = sheet.data[row]
 				let id = rowdatas[0]
 				if (id == null) {
@@ -376,6 +396,9 @@ class Excel {
 							break;
 						case 'Array<string>':
 							data.push(value.split('|'))
+							break;
+						default:
+							data.push(this.types[type].get(value))
 							break;
 					}
 				}
